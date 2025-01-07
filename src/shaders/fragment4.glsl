@@ -11,7 +11,6 @@ out vec4 colorOut;
 #define PI 3.14159265359
 
 float timeSin = sin(u_time / 300.0);
-const int MAX_ROOTS = 64; // Maximum number of roots of unity
 
 
 //math function
@@ -40,7 +39,7 @@ vec4 qdiv(in vec4 a, in vec4 b) {
 
 
 vec4 qpow(vec4 c, float p) {
-    vec4 sum = vec4(1, timeSin,timeSin, timeSin);
+    vec4 sum = vec4(timeSin, timeSin,timeSin, timeSin);
     for (int i = 1; i < p; i++) {
         sum = qmul(sum, c);
     }
@@ -57,10 +56,10 @@ vec4 qpowExact(vec4 c, float p) {
 
 
 //quantum function function
-float n = 2;
+const float n = 3;
 
 vec4 qFunction(vec4 q) {
-    return q - qdiv(qpow(q, n + 1) - vec4(1, 0, 0, 0), n * qpowExact(q, n-1));;
+    return q - qdiv(0.5*qpow(q, n+1) - q - vec4(1, 0, 0, 0), n*0.5 * qpowExact(q, n-1) - vec4(1,0,0,0));;
 }
 
 vec4 qFunctionNewton(vec4 q) {
@@ -68,10 +67,10 @@ vec4 qFunctionNewton(vec4 q) {
 }
 
 
-vec4 roots[MAX_ROOTS];
+vec4 roots[int(n)];
 
 // Function to calculate roots of unity
-void calculateRootsOfUnity(int m, out vec4 roots[MAX_ROOTS]) {
+void calculateRootsOfUnity(int m, out vec4 roots[int(n)]) {
     for (int i = 0; i < m; i++) {
         float angle = 2.0 * PI * float(i) / float(m);
         roots[i] = vec4(cos(angle), sin(angle),0,0);
@@ -95,7 +94,7 @@ vec3 NewtonFractalQuaternion(in vec4 c) {
         z = qFunction(z);
         for (int i = 0; i < roots.length; i++) {
             if (length(z - roots[i]) < tolerance) {
-                return colors[i] * 1;
+                return colors[i] *(1-iteration/float(maxIteration));
             }
         }
     }
@@ -104,12 +103,12 @@ vec3 NewtonFractalQuaternion(in vec4 c) {
 
 vec3 NewtonMethod(in vec4 c) {
     vec4 z = c;
-    vec4 zNudge = c + 0.000001;
+    vec4 zNudge = c + c * 0.0001;
     int maxIteration = 100;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
         z = qFunction(z);
         zNudge = qFunction(zNudge);
-        if(length(z-zNudge) > 0.1) return vec3(1);
+        if(length(z-zNudge) > 1) return vec3(1-iteration/float(maxIteration)+0.1);
     }
     return vec3(0.0);
 }

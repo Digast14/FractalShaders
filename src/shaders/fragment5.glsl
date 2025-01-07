@@ -47,7 +47,7 @@ vec4 qdiv(in vec4 a, in vec4 b) {
 }
 
 vec4 qpow(vec4 c, float p) {
-    vec4 sum = vec4(1, 0,timeSin(1), 0);
+    vec4 sum = vec4(1, timeSin(1), 0, 0);
     for (int i = 1; i < p; i++) {
         sum = qmul(sum, c);
     }
@@ -80,7 +80,7 @@ vec4 qFunction(in vec4 q) {
 
 //function 2
 vec4 qFunction2(vec4 q) {
-    return q - qdiv(qpow(q, n + 1) - vec4(1, 0, 0, 0), n * qpowExact(q, n-1));;
+    return q - qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpowExact(q, n-1));;
 }
 vec4 qFunction3(vec4 q, vec4 c) {
     return qpow(q, 2) - vec4(1, 0, 0, 0);
@@ -160,12 +160,12 @@ vec3 rayMarch(vec3 origin, vec3 dir) {
         //t +=  0.01 + i/400.0;
         t +=  0.025;
 
-        if (pos.z > 0) continue;
+        //if (pos.z > 0) continue;
         //if (pos.z < -0.1) continue;
         //if (pos.y >0 ) continue;
         //if (pos.x >0 ) continue;
 
-        vec3 color = mandelbrot(vec4(pos.xyz, 0));
+        vec3 color = newtonFractal(vec4(pos.xyz, 0));
         if (color != vec3(0.0)) return  color * ((1- clamp(length(pos - origin)/5.0, 0, 1))) ;
     }
     return vec3(0, 0, 0.2);
