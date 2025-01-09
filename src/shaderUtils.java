@@ -15,7 +15,7 @@ public class shaderUtils {
     private static int vbo;
     private static int ebo;
     private final static int resX = 720;
-    private final static int resY = 720;
+    private final static int resY = 720 ;
 
     public static void init(String shaderPath) {
         // Initialize GLFW

@@ -12,6 +12,20 @@ out vec4 colorOut;
 
 float timeSin = sin(u_time / 300.0);
 
+vec3 colors[12] = vec3[12](
+vec3(1.0, 0.0, 0.0),
+vec3(0.0, 1.0, 0.0),
+vec3(0.0, 0.0, 1.0),
+vec3(1.0, 1.0, 0.0),
+vec3(1.0, 0.0, 1.0),
+vec3(0.0, 1.0, 1.0),
+vec3(1.0, 0.0, 0.0),
+vec3(0.0, 1.0, 0.0),
+vec3(0.0, 0.0, 1.0),
+vec3(1.0, 1.0, 0.0),
+vec3(1.0, 0.0, 1.0),
+vec3(0.0, 1.0, 1.0)
+);
 
 //math function
 vec4 qmul(in vec4 a, in vec4 b) {
@@ -37,16 +51,21 @@ vec4 qdiv(in vec4 a, in vec4 b) {
     );
 }
 
-
-vec4 qpow(vec4 c, float p) {
-    vec4 sum = vec4(timeSin, timeSin,timeSin, timeSin);
-    for (int i = 1; i < p; i++) {
-        sum = qmul(sum, c);
-    }
-    return sum;
+vec4 qsin(vec4 q){
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(sin(a)*cosh(vabs), cos(a)*sinh((vabs))*v/vabs);
 }
 
-vec4 qpowExact(vec4 c, float p) {
+vec4 qcos(vec4 q){
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(cos(a)*cosh(vabs), -sin(a)*sinh((vabs))*v/vabs);
+}
+
+vec4 qpow(vec4 c, float p) {
     vec4 sum = c;
     for (int i = 1; i < p; i++) {
         sum = qmul(sum, c);
@@ -55,19 +74,25 @@ vec4 qpowExact(vec4 c, float p) {
 }
 
 
+
 //quantum function function
 const float n = 3;
-
-vec4 qFunction(vec4 q) {
-    return q - qdiv(0.5*qpow(q, n+1) - q - vec4(1, 0, 0, 0), n*0.5 * qpowExact(q, n-1) - vec4(1,0,0,0));;
-}
-
-vec4 qFunctionNewton(vec4 q) {
-    return q - qdiv(qpowExact(q, n) - vec4(1, 0, 0, 0), n * qpowExact(q, n-1));;
-}
-
-
 vec4 roots[int(n)];
+
+
+
+//NewtonFractal funktion in Form von f(q) = q-a(function(q)/derivative(q)), q und a quantoren
+vec4 qFunction(vec4 q) {
+    return q - qmul(vec4(1,1,1,1),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
+}
+vec4 qFunction2(vec4 q) {
+    return q - qmul(vec4(1, timeSin, timeSin, timeSin), (qdiv(qsin(q), qcos(q))));
+}
+vec4 qFunction3(vec4 q) {
+    return q - qmul(vec4(1, timeSin, timeSin, timeSin),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n-1)));
+}
+
+
 
 // Function to calculate roots of unity
 void calculateRootsOfUnity(int m, out vec4 roots[int(n)]) {
@@ -77,21 +102,14 @@ void calculateRootsOfUnity(int m, out vec4 roots[int(n)]) {
     }
 }
 
-vec3 colors[6] = vec3[6](
-vec3(1.0, 0.0, 0.0),
-vec3(0.0, 1.0, 0.0),
-vec3(0.0, 0.0, 1.0),
-vec3(1.0, 1.0, 0.0),
-vec3(1.0, 0.0, 1.0),
-vec3(0.0, 1.0, 1.0)
-);
+
 
 vec3 NewtonFractalQuaternion(in vec4 c) {
     float tolerance = 0.1;
     vec4 z = c;
     int maxIteration = 200;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
-        z = qFunction(z);
+        z = qFunction3(z);
         for (int i = 0; i < roots.length; i++) {
             if (length(z - roots[i]) < tolerance) {
                 return colors[i] *(1-iteration/float(maxIteration));
@@ -106,8 +124,8 @@ vec3 NewtonMethod(in vec4 c) {
     vec4 zNudge = c + c * 0.0001;
     int maxIteration = 100;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
-        z = qFunction(z);
-        zNudge = qFunction(zNudge);
+        z = qFunction3(z);
+        zNudge = qFunction3(zNudge);
         if(length(z-zNudge) > 1) return vec3(1-iteration/float(maxIteration)+0.1);
     }
     return vec3(0.0);
@@ -116,7 +134,7 @@ vec3 NewtonMethod(in vec4 c) {
 vec3 mandelbrot(in vec4 c) {
     vec4 z = vec4(0, 0, 0, 0);
     for (int d = 0; d < 100; d++) {
-        z = qpow(z, 3) + c;
+        z = qpow(z, 2) + c;
         if (length(z) > 2.1) {
             return vec3(0);
         }
@@ -124,12 +142,20 @@ vec3 mandelbrot(in vec4 c) {
     return vec3(1);
 }
 
+
+
 void main() {
      calculateRootsOfUnity(int(n), roots);
 
     float aspectRatio = u_resolution.x / u_resolution.y;
     vec2 uv = vec2(((gl_FragCoord.x / u_resolution.y) - (aspectRatio) * 0.5), ((gl_FragCoord.y / u_resolution.y) - 0.5));
     vec2 ro = vec2(-u_origin.y, u_origin.x);
-    vec3 color = NewtonMethod(vec4(uv / u_info + ro, 0,0));
+
+    float degree = PI*0.5;
+
+    vec4 pixelCoord = vec4(uv / u_info + ro, 0,0);
+    vec4 pixelCoordRotated =  vec4(pixelCoord.x,pixelCoord.y*sin(degree),pixelCoord.y*cos(degree),0);
+
+    vec3 color = NewtonMethod(pixelCoordRotated);
     colorOut = vec4(vec3(color), 1.0);
 }

@@ -8,11 +8,17 @@ uniform vec3 u_direction;
 uniform int u_time;
 out vec4 colorOut;
 
-float timeSin(float x){
-    return abs(sin(u_time / (100.0*x)));
-}
+#define PI 3.14159265359
 
-vec3 colors[6] = vec3[6](
+float timeSin = sin(u_time / 300.0);
+
+vec3 colors[12] = vec3[12](
+vec3(1.0, 0.0, 0.0),
+vec3(0.0, 1.0, 0.0),
+vec3(0.0, 0.0, 1.0),
+vec3(1.0, 1.0, 0.0),
+vec3(1.0, 0.0, 1.0),
+vec3(0.0, 1.0, 1.0),
 vec3(1.0, 0.0, 0.0),
 vec3(0.0, 1.0, 0.0),
 vec3(0.0, 0.0, 1.0),
@@ -47,14 +53,6 @@ vec4 qdiv(in vec4 a, in vec4 b) {
 }
 
 vec4 qpow(vec4 c, float p) {
-    vec4 sum = vec4(1, timeSin(1), 0, 0);
-    for (int i = 1; i < p; i++) {
-        sum = qmul(sum, c);
-    }
-    return sum;
-}
-
-vec4 qpowExact(vec4 c, float p) {
     vec4 sum = c;
     for (int i = 1; i < p; i++) {
         sum = qmul(sum, c);
@@ -62,28 +60,44 @@ vec4 qpowExact(vec4 c, float p) {
     return sum;
 }
 
-
-
-//fuction one
-int n = 4;
-
-vec4 func(vec4 c) {
-    return qpowExact(c, n) - vec4(1, 0, 0, 0);
-}
-vec4 deriv(vec4 c) {
-    return n * qpowExact(c, n - 1);
-}
-vec4 qFunction(in vec4 q) {
-    return q - qdiv(func(q), deriv(q));
+vec4 qsin(vec4 q){
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(sin(a)*cosh(vabs), cos(a)*sinh((vabs))*v/vabs);
 }
 
+vec4 qcos(vec4 q){
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(cos(a)*cosh(vabs), -sin(a)*sinh((vabs))*v/vabs);
+}
 
-//function 2
+
+
+//quantum function cosntants
+const float n = 4;
+vec4 roots[int(n)];
+
+// Function to calculate roots of unity
+void calculateRootsOfUnity(int m, out vec4 roots[int(n)]) {
+    for (int i = 0; i < m; i++) {
+        float angle = 2.0 * PI * float(i) / float(m);
+        roots[i] = vec4(cos(angle), sin(angle),0,0);
+    }
+}
+
+
+//NewtonFractal funktion in Form von f(q) = q-a(function(q)/derivative(q)), q und a quantoren
+vec4 qFunction(vec4 q) {
+    return q - qmul(vec4(1,1,1,1),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
+}
 vec4 qFunction2(vec4 q) {
-    return q - qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpowExact(q, n-1));;
+    return q - qmul(vec4(1, 0, 0, 0), (qdiv(qsin(q), qcos(q))));
 }
-vec4 qFunction3(vec4 q, vec4 c) {
-    return qpow(q, 2) - vec4(1, 0, 0, 0);
+vec4 qFunction3(vec4 q) {
+    return q - qmul(vec4(1, timeSin, timeSin, timeSin),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n-1)));
 }
 
 
@@ -99,6 +113,7 @@ vec3 julia(in vec4 c) {
 }
 
 
+
 //make mandelbrotSet
 vec3 mandelbrot(in vec4 c) {
     vec4 z = vec4(0);
@@ -112,26 +127,19 @@ vec3 mandelbrot(in vec4 c) {
 }
 
 
+
 //make Newton Intersection
 vec3 newtonMethod(in vec4 c) {
     vec4 z = c;
     vec4 zNudge = c + 0.0001;
     int maxIteration = 30;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
-        z = qFunction2(z);
-        zNudge = qFunction2(zNudge);
+        z = qFunction3(z);
+        zNudge = qFunction3(zNudge);
         if (length(z - zNudge) > 0.1) return vec3(1 - iteration / float(maxIteration + 10));
     }
     return vec3(0.0);
 }
-
-
-//arrays need for coloring
-vec4 roots[3] = vec4[3](
-vec4(1, 0, 0, 0),
-vec4(-0.5, sqrt(3.0) / 2.0, 0, 0),
-vec4(-0.5, -sqrt(3.0) / 2.0, 0, 0)
-);
 
 
 
@@ -141,7 +149,7 @@ vec3 newtonFractal(in vec4 c) {
     vec4 z = c;
     int maxIteration = 50;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
-        z = qFunction2(z);
+        z = qFunction3(z);
         for (int i = 0; i < roots.length; i++) {
             if (length(z - roots[i]) < tolerance) {
                 return colors[i] * (1 - iteration / float(maxIteration + 10));
@@ -152,28 +160,24 @@ vec3 newtonFractal(in vec4 c) {
 }
 
 
+
 //rendering from camera
 vec3 rayMarch(vec3 origin, vec3 dir) {
     float t = 0.0;
     for (int i = 0; i < 200; i++) {
         vec3 pos = origin + t * dir;
-        //t +=  0.01 + i/400.0;
-        t +=  0.025;
+        t +=  0.025 + i*0.001;
 
         //if (pos.z > 0) continue;
         //if (pos.z < -0.1) continue;
         //if (pos.y >0 ) continue;
         //if (pos.x >0 ) continue;
 
-        vec3 color = newtonFractal(vec4(pos.xyz, 0));
-        if (color != vec3(0.0)) return  color * ((1- clamp(length(pos - origin)/5.0, 0, 1))) ;
+        vec3 color = newtonMethod(vec4(pos.xyz, 0));
+        if (color != vec3(0.0)) return color;
     }
     return vec3(0, 0, 0.2);
 }
-
-
-
-
 
 
 
@@ -186,6 +190,8 @@ vec3 rotateByVec3(in vec3 vector, in vec3 axis, in float angle) {
 
 void main() {
     //make necessary variables
+    calculateRootsOfUnity(int(n), roots);
+
     float aspectRatio = u_resolution.x / u_resolution.y;
     vec2 uv = vec2(((gl_FragCoord.x / u_resolution.y) - (aspectRatio) * 0.5), ((gl_FragCoord.y / u_resolution.y) - 0.5));
 
