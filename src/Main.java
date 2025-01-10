@@ -38,7 +38,7 @@ public class Main {
 
         double[] nextXPos = new double[1];
         double[] nextYPos = new double[1];
-        glfwGetCursorPos(shaderUtils.window, nextXPos, nextYPos);
+        //glfwGetCursorPos(shaderUtils.window, nextXPos, nextYPos);
         cam.rotateLeftRight((xPos - nextXPos[0]) / 360.0);
         cam.rotateUpDown((yPos - nextYPos[0]) / 360.0);
         xPos = nextXPos[0];

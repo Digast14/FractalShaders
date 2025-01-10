@@ -65,6 +65,15 @@ vec4 qcos(vec4 q){
     return vec4(cos(a)*cosh(vabs), -sin(a)*sinh((vabs))*v/vabs);
 }
 
+vec4 qexp(vec4 q){
+    float expA = exp(q.x);
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(expA*cos(vabs), expA*(v/vabs*sin(vabs)));
+}
+
+
+
 vec4 qpow(vec4 c, float p) {
     vec4 sum = c;
     for (int i = 1; i < p; i++) {
@@ -83,13 +92,20 @@ vec4 roots[int(n)];
 
 //NewtonFractal funktion in Form von f(q) = q-a(function(q)/derivative(q)), q und a quantoren
 vec4 qFunction(vec4 q) {
-    return q - qmul(vec4(1,1,1,1),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
+    return q - qmul(vec4(1,1,0,0),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
 }
 vec4 qFunction2(vec4 q) {
-    return q - qmul(vec4(1, timeSin, timeSin, timeSin), (qdiv(qsin(q), qcos(q))));
+    return q - qmul(vec4(1, 0, 0, 0), (qdiv(qexp(q) - vec4(1, 0, 0, 0), qexp(q))));
+
+    //return q - qmul(vec4(1, 0, 0, 0), (qdiv(qmul(qpow(q,n),qexp(q)) + vec4(1, 0, 0, 0), n*qmul(q,qexp(q))+qmul(qpow(q,n),qexp(q)))));
 }
 vec4 qFunction3(vec4 q) {
-    return q - qmul(vec4(1, timeSin, timeSin, timeSin),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n-1)));
+
+    return q - qmul(vec4(1,0,0,0),qdiv(vec4(1,0,0,0),qpow(q,3)+qmul(q,vec4(-3,-3,0,0))));
+
+    //return q - qmul(vec4(1,timeSin,0,0), qdiv(qdiv(vec4(1,0,0,0),q)+vec4(1,0,0,0),qdiv(vec4(-1,0,0,0),qpow(q,2))));
+
+    //return q - qmul(vec4(1, timeSin, timeSin, timeSin),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n-1)));
 }
 
 
@@ -110,7 +126,7 @@ vec3 NewtonFractalQuaternion(in vec4 c) {
     int maxIteration = 200;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
         z = qFunction3(z);
-        for (int i = 0; i < roots.length; i++) {
+        for (int i = 0; i < n; i++) {
             if (length(z - roots[i]) < tolerance) {
                 return colors[i] *(1-iteration/float(maxIteration));
             }

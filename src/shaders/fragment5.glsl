@@ -150,7 +150,7 @@ vec3 newtonFractal(in vec4 c) {
     int maxIteration = 50;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
         z = qFunction3(z);
-        for (int i = 0; i < roots.length; i++) {
+        for (int i = 0; i < n; i++) {
             if (length(z - roots[i]) < tolerance) {
                 return colors[i] * (1 - iteration / float(maxIteration + 10));
             }
