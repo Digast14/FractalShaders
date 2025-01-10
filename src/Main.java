@@ -3,6 +3,7 @@
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL20.glUniform1i;
 
 
 public class Main {
@@ -12,9 +13,8 @@ public class Main {
 
     private static Camera cam;
 
-
     public static void run() {
-        shaderUtils.init("/shaders/fragment4.glsl");
+        shaderUtils.init("/shaders/fragment5.glsl");
         //make Camera
         cam = new Camera(new Vector3(0,0,2));
         //startLoop
@@ -27,6 +27,7 @@ public class Main {
     public static void getInputs(){
         glfwSetInputMode(shaderUtils.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         playTime = glfwGetKey(shaderUtils.window, GLFW_KEY_ENTER) == GLFW_PRESS;
+        mode = (glfwGetKey(shaderUtils.window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) ? 1 : 0;
         if (glfwGetKey(shaderUtils.window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) cam.moveCamera(new Vector3(0,0,-0.01).times(1/info));
         if (glfwGetKey(shaderUtils.window, GLFW_KEY_SPACE) == GLFW_PRESS) cam.moveCamera(new Vector3(0,0,0.01).times(1/info));
         if (glfwGetKey(shaderUtils.window, GLFW_KEY_W) == GLFW_PRESS) cam.moveCamera(new Vector3(0.01,0,0).times(1/info));
@@ -38,20 +39,21 @@ public class Main {
 
         double[] nextXPos = new double[1];
         double[] nextYPos = new double[1];
-        //glfwGetCursorPos(shaderUtils.window, nextXPos, nextYPos);
+        glfwGetCursorPos(shaderUtils.window, nextXPos, nextYPos);
         cam.rotateLeftRight((xPos - nextXPos[0]) / 360.0);
         cam.rotateUpDown((yPos - nextYPos[0]) / 360.0);
         xPos = nextXPos[0];
         yPos = nextYPos[0];
     }
 
-    public static void parseCamInputs(int originUniform, int directionUniform, int infoUniform, int timeUniform){
+    public static void parseCamInputs(int originUniform, int directionUniform, int infoUniform, int timeUniform, int modeUniform){
         //System.out.println(cam.origin.x + " " + cam.origin.y + " " + cam.origin.z);
 
         glUniform3f(originUniform, (float) cam.origin.x, (float) cam.origin.y, (float) cam.origin.z);
         glUniform3f(directionUniform, (float) cam.pointing.x, (float) cam.pointing.y, (float) cam.pointing.z);
         glUniform1f(infoUniform,info);
         glUniform1i(timeUniform, time);
+        glUniform1i(modeUniform,mode);
     }
 
 
@@ -60,6 +62,7 @@ public class Main {
     private static float info = 1;
     private static int time = 0;
     private static boolean playTime = false;
+    private static int mode = 0;
 
 
     public static void loop( ) {
@@ -71,6 +74,8 @@ public class Main {
         int directionUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_direction");
         int infoUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_info");
         int timeUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_time");
+        int modeUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_mode");
+
 
         createCapabilities();
 
@@ -85,7 +90,7 @@ public class Main {
             }
 
             getInputs();
-            parseCamInputs(originUniform, directionUniform,infoUniform,timeUniform);
+            parseCamInputs(originUniform, directionUniform,infoUniform,timeUniform, modeUniform);
             glfwPollEvents();
             shaderUtils.render();
             sync(current);

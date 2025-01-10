@@ -6,6 +6,8 @@ uniform float u_info;
 uniform vec3 u_origin;
 uniform vec3 u_direction;
 uniform int u_time;
+uniform int u_mode;
+
 out vec4 colorOut;
 
 #define PI 3.14159265359
@@ -27,7 +29,7 @@ vec3(1.0, 0.0, 1.0),
 vec3(0.0, 1.0, 1.0)
 );
 
-//quaternion math functions
+//math function
 vec4 qmul(in vec4 a, in vec4 b) {
     return vec4(
     a.x * b.x - a.y * b.y - a.z * b.z - a.w * b.w,
@@ -39,10 +41,9 @@ vec4 qmul(in vec4 a, in vec4 b) {
 
 vec4 qdiv(in vec4 a, in vec4 b) {
     float normSquared = b.x * b.x + b.y * b.y + b.z * b.z + b.w * b.w;
-
     if (normSquared == 0.0) return vec4(0.0);
 
-    vec4 bConjugate = vec4(b.x, -b.y, -b.z, -b.w);
+    vec4 bConjugate = vec4(b.x, -b.yzw);
 
     return vec4(
     (a.x * bConjugate.x - a.y * bConjugate.y - a.z * bConjugate.z - a.w * bConjugate.w) / normSquared,
@@ -52,6 +53,25 @@ vec4 qdiv(in vec4 a, in vec4 b) {
     );
 }
 
+//expanded functions
+vec4 qsin(vec4 q){
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(sin(a)*cosh(vabs), cos(a)*sinh((vabs))*v/vabs);
+}
+vec4 qcos(vec4 q){
+    float a = q.x;
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(cos(a)*cosh(vabs), -sin(a)*sinh((vabs))*v/vabs);
+}
+vec4 qexp(vec4 q){
+    float expA = exp(q.x);
+    vec3 v = vec3(q.yzw);
+    float vabs = length(v);
+    return vec4(expA*cos(vabs), expA*(v/vabs*sin(vabs)));
+}
 vec4 qpow(vec4 c, float p) {
     vec4 sum = c;
     for (int i = 1; i < p; i++) {
@@ -60,23 +80,9 @@ vec4 qpow(vec4 c, float p) {
     return sum;
 }
 
-vec4 qsin(vec4 q){
-    float a = q.x;
-    vec3 v = vec3(q.yzw);
-    float vabs = length(v);
-    return vec4(sin(a)*cosh(vabs), cos(a)*sinh((vabs))*v/vabs);
-}
-
-vec4 qcos(vec4 q){
-    float a = q.x;
-    vec3 v = vec3(q.yzw);
-    float vabs = length(v);
-    return vec4(cos(a)*cosh(vabs), -sin(a)*sinh((vabs))*v/vabs);
-}
 
 
-
-//quantum function cosntants
+//quantum function function
 const float n = 4;
 vec4 roots[int(n)];
 
@@ -90,40 +96,32 @@ void calculateRootsOfUnity(int m, out vec4 roots[int(n)]) {
 
 
 //NewtonFractal funktion in Form von f(q) = q-a(function(q)/derivative(q)), q und a quantoren
-vec4 qFunction(vec4 q) {
-    return q - qmul(vec4(1,1,1,1),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
+vec4 qFunctionNewton(vec4 q) {
+    return q - qmul(vec4(1,timeSin,0,0),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
 }
-vec4 qFunction2(vec4 q) {
-    return q - qmul(vec4(1, 0, 0, 0), (qdiv(qsin(q), qcos(q))));
-}
-vec4 qFunction3(vec4 q) {
-    return q - qmul(vec4(1, timeSin, timeSin, timeSin),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n-1)));
+vec4 qFunctionNewton2(vec4 q) {
+    return q - qmul(vec4(1, 0, 0, 0),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n-1)));
 }
 
 
-
-//make julia set
-vec3 julia(in vec4 c) {
-    vec4 z = c;
-    for (int d = 0; d < 30; d++) {
-        z = qmul(z, z) + (0.185, 0.478, 0.125, -0.392);
-        if (length(z) > 2.1) return vec3(0);
-    }
-    return vec3(1.0);
+//NewtonFractal with exp functions
+vec4 qFunctionExp(vec4 q) {
+    return q - qmul(vec4(1, 0, 0, 0), (qdiv(qexp(q) - vec4(1, 0, 0, 0), qexp(q))));
+}
+vec4 qFunctionExp2(vec4 q) {
+    return q - qmul(vec4(1, 0, 0, 0), (qdiv(qmul(qpow(q,n),qexp(q)) + vec4(1, 0, 0, 0), n*qmul(q,qexp(q))+qmul(qpow(q,n),qexp(q)))));
 }
 
 
+//ratioanl Function
+vec4 qfunctionRational(vec4 q){
+    return qmul(vec4(1,0,0,0),qdiv(vec4(1,0,0,0),qpow(q,3)+qmul(q,vec4(-3,-3,0,0))));
+}
 
-//make mandelbrotSet
-vec3 mandelbrot(in vec4 c) {
-    vec4 z = vec4(0);
-    for (int d = 0; d < 30; d++) {
-        z = qpow(z, 3) + c;
-        if (length(z) > 2.1) {
-            return vec3(0);
-        }
-    }
-    return vec3(1);
+
+//Mandelbrot Function, c = pixel Coordinates for Mandelbrot, c = Constant for Julia set equivalent
+vec4 qMandelbrotJulia(vec4 q, vec4 c){
+    return qmul(q,q)+c;
 }
 
 
@@ -134,8 +132,8 @@ vec3 newtonMethod(in vec4 c) {
     vec4 zNudge = c + 0.0001;
     int maxIteration = 30;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
-        z = qFunction3(z);
-        zNudge = qFunction3(zNudge);
+        z = qFunctionNewton(z);
+        zNudge = qFunctionNewton(zNudge);
         if (length(z - zNudge) > 0.1) return vec3(1 - iteration / float(maxIteration + 10));
     }
     return vec3(0.0);
@@ -149,7 +147,7 @@ vec3 newtonFractal(in vec4 c) {
     vec4 z = c;
     int maxIteration = 50;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
-        z = qFunction3(z);
+        z = qFunctionNewton(z);
         for (int i = 0; i < n; i++) {
             if (length(z - roots[i]) < tolerance) {
                 return colors[i] * (1 - iteration / float(maxIteration + 10));
@@ -168,12 +166,15 @@ vec3 rayMarch(vec3 origin, vec3 dir) {
         vec3 pos = origin + t * dir;
         t +=  0.025 + i*0.001;
 
-        //if (pos.z > 0) continue;
+        if (pos.z > 0) continue;
         //if (pos.z < -0.1) continue;
         //if (pos.y >0 ) continue;
         //if (pos.x >0 ) continue;
 
-        vec3 color = newtonMethod(vec4(pos.xyz, 0));
+        vec3 color;
+        if(u_mode==0) color = newtonMethod(vec4(pos.xyz, 0));
+        else color = newtonFractal(vec4(pos.xyz, 0));
+
         if (color != vec3(0.0)) return color;
     }
     return vec3(0, 0, 0.2);
