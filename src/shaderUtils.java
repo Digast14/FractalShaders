@@ -2,6 +2,8 @@ import org.lwjgl.opengl.GL;
 
 import java.io.IOException;
 import java.io.InputStream;
+
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.ARBVertexArrayObject.*;
 
@@ -14,26 +16,36 @@ public class shaderUtils {
     private static int vao;
     private static int vbo;
     private static int ebo;
-    private final static int resX = 720;
-    private final static int resY = 720 ;
+    private static int resX = 720;
+    private static int resY = 720 ;
 
-    public static void init(String shaderPath) {
+    public static void init(int _resX, int _resY) {
         // Initialize GLFW
+        resX =_resX;
+        resY = _resY;
+
         System.out.println("Hello to this Shader test!");
-        if ( !glfwInit() ) throw new IllegalStateException("Unable to initialize GLFW");;
+        if (!glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
+
         glfwDefaultWindowHints();
         window = glfwCreateWindow(resX, resY, "just Works!", NULL, NULL);
-
 
         // Make OpenGL context current
         glfwMakeContextCurrent(window);
         GL.createCapabilities(); // Initialize OpenGL bindings
+    }
 
+
+    public static void initShaders(String shaderPath, String javaFunction){
         // Set up shaders
-        int fragmentShader = createShader(shaderPath, GL_FRAGMENT_SHADER);
-        int vertexShader = createShader("/shaders/vertex.glsl", GL_VERTEX_SHADER);
+        String fragmentShaderSource = shaderLoadSource(shaderPath);
+        fragmentShaderSource = fragmentShaderSource.replace("__FUNCTION_PLACEHOLDER__", javaFunction);
+
+        int fragmentShader = createShaderFromSource(fragmentShaderSource, GL_FRAGMENT_SHADER);
+        int vertexShader = createShaderFromSource(shaderLoadSource("/shaders/vertex.glsl"), GL_VERTEX_SHADER);
         shaderProgram = createProgram(fragmentShader, vertexShader);
         glUseProgram(shaderProgram);
+
 
         //clean up shaders
         glDeleteShader(vertexShader);
@@ -74,21 +86,11 @@ public class shaderUtils {
     }
 
 
-    private static int createShader(String path, int type) {
-        String source;
-        try (InputStream inputStream = Main.class.getResourceAsStream(path)) {
-            if (inputStream == null) {
-                throw new IllegalArgumentException("Shader file not found: " + path);
-            }
-            source = new String(inputStream.readAllBytes());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load shader: " + path, e);
-        }
 
+    private static int createShaderFromSource(String source, int type) {
         int shader = glCreateShader(type);
         glShaderSource(shader, source);
         glCompileShader(shader);
-
         if (glGetShaderi(shader, GL_COMPILE_STATUS) == GL_FALSE) {
             throw new RuntimeException("Failed to compile shader: " + glGetShaderInfoLog(shader));
         }
@@ -127,5 +129,19 @@ public class shaderUtils {
 
         glfwDestroyWindow(window);
         glfwTerminate();
+    }
+
+
+    private static String shaderLoadSource(String filePath){
+        String source;
+        try (InputStream inputStream = Main.class.getResourceAsStream(filePath)) {
+            if (inputStream == null) {
+                throw new IllegalArgumentException("Shader file not found: " + filePath);
+            }
+            source = new String(inputStream.readAllBytes());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load shader: " + filePath, e);
+        }
+        return source;
     }
 }

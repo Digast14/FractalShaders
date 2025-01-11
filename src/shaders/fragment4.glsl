@@ -81,21 +81,17 @@ vec4 qpow(vec4 c, float p) {
 }
 
 
-
-//quantum function function
+//Polynomial degree
 const float n = 4;
-vec4 roots[int(n)];
 
 // Function to calculate roots of unity (ony for standard Newton Fractals)
+vec4 roots[int(n)];
 void calculateRootsOfUnity(int m, out vec4 roots[int(n)]) {
     for (int i = 0; i < m; i++) {
         float angle = 2.0 * PI * float(i) / float(m);
         roots[i] = vec4(cos(angle), sin(angle),0,0);
     }
 }
-
-
-
 
 //quaternion Functions
 //NewtonFractal function in Form of  f(q) = q-a(function(q)/derivative(q)), q and a are quantores
@@ -127,7 +123,8 @@ vec4 qMandelbrotJulia(vec4 q, vec4 c){
     return qmul(q,q)+c;
 }
 
-
+// Function placeholder
+__FUNCTION_PLACEHOLDER__
 
 
 
@@ -136,7 +133,7 @@ vec3 NewtonFractalQuaternion(in vec4 c) {
     vec4 z = c;
     int maxIteration = 200;
     for (int iteration = 0; iteration < maxIteration; iteration++) {
-        z = qFunctionNewton2(z);
+        z = javaFunction(z);
         for (int i = 0; i < n; i++) {
             if (length(z - roots[i]) < tolerance) {
                 return colors[i] *(1-iteration/float(maxIteration));
@@ -151,8 +148,8 @@ vec3 NewtonMethod(in vec4 c) {
     vec4 zNudge = c + c * 0.0001;
     int maxIteration = 200;
     for (int iteration=0; iteration < maxIteration; iteration++) {
-        z = qFunctionNewton2(z);
-        zNudge = qFunctionNewton2(zNudge);
+        z = javaFunction(z);
+        zNudge = javaFunction(zNudge);
         if(length(z-zNudge)>1 && (iteration>maxIteration*0.1)) return vec3(1-(iteration)/float(maxIteration*0.9));
     }
     return vec3(0);

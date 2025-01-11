@@ -113,6 +113,8 @@ vec4 qFunctionExp2(vec4 q) {
 }
 
 
+
+
 //ratioanl Function
 vec4 qfunctionRational(vec4 q){
     return qmul(vec4(1,0,0,0),qdiv(vec4(1,0,0,0),qpow(q,3)+qmul(q,vec4(-3,-3,0,0))));

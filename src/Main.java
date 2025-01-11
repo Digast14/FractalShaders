@@ -1,9 +1,6 @@
-
-
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL.*;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL20.glUniform1i;
 
 
 public class Main {
@@ -14,7 +11,8 @@ public class Main {
     private static Camera cam;
 
     public static void run() {
-        shaderUtils.init("/shaders/fragment5.glsl");
+        shaderUtils.init(720,720);
+
         //make Camera
         cam = new Camera(new Vector3(0,0,2));
         //startLoop
@@ -39,7 +37,7 @@ public class Main {
 
         double[] nextXPos = new double[1];
         double[] nextYPos = new double[1];
-        glfwGetCursorPos(shaderUtils.window, nextXPos, nextYPos);
+        //glfwGetCursorPos(shaderUtils.window, nextXPos, nextYPos);
         cam.rotateLeftRight((xPos - nextXPos[0]) / 360.0);
         cam.rotateUpDown((yPos - nextYPos[0]) / 360.0);
         xPos = nextXPos[0];
@@ -70,12 +68,16 @@ public class Main {
         double previous = glfwGetTime();
         double steps = 0.0;
 
+        glslFunctionMaker test = new glslFunctionMaker("q-quant(1,2*t,t,t)*(q^3-1)/(3*q^2)");
+        String code = test.makeCode();
+        System.out.println(code);
+        shaderUtils.initShaders("/shaders/fragment4.glsl",code);
+
         int originUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_origin");
         int directionUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_direction");
         int infoUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_info");
         int timeUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_time");
         int modeUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_mode");
-
 
         createCapabilities();
 
