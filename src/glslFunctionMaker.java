@@ -24,8 +24,19 @@ public class glslFunctionMaker {
         while (!_sortedTokenStack.isEmpty()) {
             String savedA = "", savedB = "";
             if (_sortedTokenStack.peek().charAt(0) != '_') {
-                calculator.push(_sortedTokenStack.peek());
-                _sortedTokenStack.pop();
+                if (_sortedTokenStack.peek().equals("sin") || _sortedTokenStack.peek().equals("cos") || _sortedTokenStack.peek().equals("exp")) {
+                    savedA = calculator.peek();
+                    calculator.pop();
+                    switch (_sortedTokenStack.peek()) {
+                        case "sin" -> calculator.push("qsin(" + savedA + ")");
+                        case "cos" -> calculator.push("qcos(" + savedA + ")");
+                        case "exp" -> calculator.push("qexp(" + savedA + ")");
+                    }
+                    _sortedTokenStack.pop();
+                } else {
+                    calculator.push(_sortedTokenStack.peek());
+                    _sortedTokenStack.pop();
+                }
             } else {
                 savedA = calculator.peek();
                 calculator.pop();
@@ -51,14 +62,17 @@ public class glslFunctionMaker {
     }
 
 
-
     private void operationSorter() {
         Stack<String> opStack = new Stack<>();
         Stack<String> _inputStack = reverseStack((Stack<String>) tokenStack.clone());
 
         while (!_inputStack.isEmpty()) {
             if (_inputStack.peek().charAt(0) != '_') {
-                sortedTokenStack.push(_inputStack.peek());
+                if (_inputStack.peek().equals("sin") || _inputStack.peek().equals("cos") || _inputStack.peek().equals("exp")) {
+                    opStack.push(_inputStack.peek());
+                } else {
+                    sortedTokenStack.push(_inputStack.peek());
+                }
                 _inputStack.pop();
             } else if (_inputStack.peek().charAt(0) == '_') {
                 if (Objects.equals(_inputStack.peek(), "_(")) {
@@ -123,6 +137,11 @@ public class glslFunctionMaker {
                 longToken = longToken + ")";
                 tokenStack.push(longToken);
                 if (!functionCopy.isEmpty()) functionCopy = functionCopy.substring(1);
+            } else if (functionCopy.startsWith("sin") || functionCopy.startsWith("cos") || functionCopy.startsWith("exp")) {
+                if (functionCopy.startsWith("sin")) tokenStack.push("sin");
+                if (functionCopy.startsWith("cos")) tokenStack.push("cos");
+                if (functionCopy.startsWith("exp")) tokenStack.push("exp");
+                functionCopy = functionCopy.substring(3);
             } else {
                 isPower = false;
                 longToken = "";

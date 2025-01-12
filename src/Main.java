@@ -11,7 +11,7 @@ public class Main {
     private static Camera cam;
 
     public static void run() {
-        shaderUtils.init(720,720);
+        shaderUtils.init(1200,1200);
 
         //make Camera
         cam = new Camera(new Vector3(0,0,2));
@@ -68,7 +68,7 @@ public class Main {
         double previous = glfwGetTime();
         double steps = 0.0;
 
-        glslFunctionMaker test = new glslFunctionMaker("q-quant(1,2*t,t,t)*(q^3-1)/(3*q^2)");
+        glslFunctionMaker test = new glslFunctionMaker("q/(q^2-q^3)+quant(0,t,0,0)");
         String code = test.makeCode();
         System.out.println(code);
         shaderUtils.initShaders("/shaders/fragment4.glsl",code);
