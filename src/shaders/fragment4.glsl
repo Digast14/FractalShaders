@@ -82,7 +82,7 @@ vec4 qpow(vec4 c, float p) {
 
 
 //Polynomial degree
-const float n = 4;
+const float n = 3;
 
 // Function to calculate roots of unity (ony for standard Newton Fractals)
 vec4 roots[int(n)];
@@ -96,7 +96,7 @@ void calculateRootsOfUnity(int m, out vec4 roots[int(n)]) {
 //quaternion Functions
 //NewtonFractal function in Form of  f(q) = q-a(function(q)/derivative(q)), q and a are quantores
 vec4 qFunctionNewton(vec4 q) {
-    return q - qmul(vec4(1,0,0,0),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
+    return q - qmul(vec4(1,timeSin*2,timeSin,timeSin),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
 }
 vec4 qFunctionNewton2(vec4 q) {
     return q - qmul(vec4(1, 0, 0, 0),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n-1)));
@@ -123,7 +123,7 @@ vec4 qMandelbrotJulia(vec4 q, vec4 c){
     return qmul(q,q)+c;
 }
 
-// Function placeholder
+// Function placeholder (name javaFunction(z))
 __FUNCTION_PLACEHOLDER__
 
 

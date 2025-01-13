@@ -1,6 +1,7 @@
 import java.util.Objects;
 import java.util.Stack;
 
+//Dieser Code wandelt Funktionen in GLSL code um
 
 public class glslFunctionMaker {
     public static void main(String[] args) {

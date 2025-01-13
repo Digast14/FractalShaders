@@ -83,7 +83,7 @@ vec4 qpow(vec4 c, float p) {
 
 
 //quantum function function
-const float n = 4;
+const float n = 3;
 vec4 roots[int(n)];
 
 // Function to calculate roots of unity
@@ -97,7 +97,7 @@ void calculateRootsOfUnity(int m, out vec4 roots[int(n)]) {
 
 //NewtonFractal funktion in Form von f(q) = q-a(function(q)/derivative(q)), q und a quantoren
 vec4 qFunctionNewton(vec4 q) {
-    return q - qmul(vec4(1,timeSin,0,0),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
+    return q - qmul(vec4(1,timeSin*2,timeSin,timeSin),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n*qpow(q,n-1)));
 }
 vec4 qFunctionNewton2(vec4 q) {
     return q - qmul(vec4(1, 0, 0, 0),qdiv(qpow(q, n) - vec4(1, 0, 0, 0), n * qpow(q, n-1)));
@@ -168,7 +168,7 @@ vec3 rayMarch(vec3 origin, vec3 dir) {
         vec3 pos = origin + t * dir;
         t +=  0.025 + i*0.001;
 
-        if (pos.z > 0) continue;
+        //if (pos.z > 0) continue;
         //if (pos.z < -0.1) continue;
         //if (pos.y >0 ) continue;
         //if (pos.x >0 ) continue;

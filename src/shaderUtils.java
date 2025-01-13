@@ -2,13 +2,12 @@ import org.lwjgl.opengl.GL;
 
 import java.io.IOException;
 import java.io.InputStream;
-
-
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.ARBVertexArrayObject.*;
-
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
+
+//Behind the Scenes um Shader zu kompilieren, screen zu machen etc.
 
 public class shaderUtils {
     public static long window;
