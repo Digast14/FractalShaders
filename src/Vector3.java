@@ -37,26 +37,6 @@ public class Vector3 {
         return new Vector3(x / magnitude, y / magnitude, z / magnitude);
     }
 
-    public Vector3 negate() {
-        return new Vector3(-x , -y, -z);
-    }
-
-    public Vector3 mod(double m) {
-        double modX = x%m;
-        double modY = y%m;
-        double modZ = z%m;
-//        if(x<0) modX +=m;
-//        if(y<0) modY +=m;
-//        if(z<0) modZ +=m;
-        return new Vector3(modX, modY, modZ);
-    }
-
-
-    //get information
-    public double maxComp() {
-        return Math.max(x, Math.max(y, z));
-    }
-
     public static double length(Vector3 v) {
         return sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2) + Math.pow(v.z, 2));
     }
@@ -72,13 +52,6 @@ public class Vector3 {
         return alpha;
     }
 
-    public static double smoothMin(double min1, double min2, double smoothnessConstant) {
-        smoothnessConstant *= 4.0;
-        double h = Math.max(smoothnessConstant - Math.abs(min1 - min2), 0.0) / smoothnessConstant;
-        return Math.min(min1, min2) - h * h * smoothnessConstant * (1.0 / 4.0);
-    }
-
-
     //calculations between Vectors
     public double dot(Vector3 k) {
         return x * k.x + y * k.y + z * k.z;
@@ -86,10 +59,6 @@ public class Vector3 {
 
     public Vector3 cross(Vector3 k) {
         return new Vector3(y * k.z - z * k.y, z * k.x - x * k.z, x * k.y - y* k.x);
-    }
-
-    public Vector3 minus(Vector3 v) {
-        return new Vector3(x - v.x, y - v.y, z - v.z);
     }
 
     public Vector3 plus(Vector3 v) {
@@ -120,7 +89,6 @@ public class Vector3 {
         alpha += degree;
         return this.setRotationXY(alpha);
     }
-
 
     //Vector Output
     public static void printVector(Vector3 v) {

@@ -11,11 +11,13 @@ public class glslFunctionMaker {
     private final Stack<String> sortedTokenStack = new Stack<>();
     private final Stack<String> tokenStack = new Stack<>();
     private final String function;
+    public String code;
 
     public glslFunctionMaker(String _function) {
         function = _function;
         stringToTokenStack();
         operationSorter();
+        code = makeCode();
     }
 
     public String makeCode() {

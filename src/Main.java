@@ -1,5 +1,6 @@
+import org.lwjgl.opengl.GL;
+
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL.*;
 import static org.lwjgl.opengl.GL20.*;
 
 //Mit w,a,s,d kann man sich bewegen, wenn's 3D ist, kann man mite SPACE und SHIFT nach oben und nach unten,
@@ -52,9 +53,9 @@ public class Main {
         double previous = glfwGetTime();
         double steps = 0.0;
 
-        //hier functionien eingeben
+        //hier functionen eingeben
         glslFunctionMaker test = new glslFunctionMaker("q-quant(1,t*2,t,t)*((q^3)-1)/(3*q^2)");
-        String code = test.makeCode();
+        String code = test.code;
         System.out.println(code);
 
 
@@ -65,7 +66,7 @@ public class Main {
         // fragment4.glsl = Quaternion funktion Julia Set zeichner 2D
         // fragment5.glsl = Quaternion funktion Julia Set zeichner 3D   !Sehr intensiv!
 
-        shaderUtils.initShaders("/shaders/fragment5.glsl",code);
+        shaderUtils.initShaders("/shaders/fragment4.glsl",code);
 
         int originUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_origin");
         int directionUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_direction");
@@ -73,7 +74,7 @@ public class Main {
         int timeUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_time");
         int modeUniform = glGetUniformLocation(shaderUtils.shaderProgram, "u_mode");
 
-        createCapabilities();
+        GL.createCapabilities();
 
         while (!glfwWindowShouldClose(shaderUtils.window)) {
             double current = glfwGetTime();
@@ -87,7 +88,6 @@ public class Main {
 
             getInputs();
             parseCamInputs(originUniform, directionUniform,infoUniform,timeUniform, modeUniform);
-            glfwPollEvents();
             shaderUtils.render();
             sync(current);
         }

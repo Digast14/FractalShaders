@@ -1,10 +1,17 @@
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.system.MemoryStack;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.IntBuffer;
+
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.ARBVertexArrayObject.*;
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 //Behind the Scenes um Shader zu kompilieren, screen zu machen etc.
@@ -19,15 +26,36 @@ public class shaderUtils {
     private static int resY = 720 ;
 
     public static void init(int _resX, int _resY) {
+
+        System.out.println("Hello to this Shader test!");
+
+        GLFWErrorCallback.createPrint(System.err).set();
+        if (!glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
+
         // Initialize GLFW
         resX =_resX;
         resY = _resY;
 
-        System.out.println("Hello to this Shader test!");
-        if (!glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
-
         glfwDefaultWindowHints();
         window = glfwCreateWindow(resX, resY, "just Works!", NULL, NULL);
+
+        try (MemoryStack stack = stackPush()) {
+            IntBuffer pWidth = stack.mallocInt(1); // int*
+            IntBuffer pHeight = stack.mallocInt(1); // int*
+
+            // Get the window size passed to glfwCreateWindow
+            glfwGetWindowSize(window, pWidth, pHeight);
+
+            // Get the resolution of the primary monitor
+            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+            // Center the window
+            glfwSetWindowPos(
+                    window,
+                    (vidmode.width() - pWidth.get(0)) / 2,
+                    (vidmode.height() - pHeight.get(0)) / 2
+            );
+        } // the stack frame is popped automatically
 
         // Make OpenGL context current
         glfwMakeContextCurrent(window);
@@ -36,6 +64,7 @@ public class shaderUtils {
 
 
     public static void initShaders(String shaderPath, String javaFunction){
+
         // Set up shaders
         String fragmentShaderSource = shaderLoadSource(shaderPath);
         fragmentShaderSource = fragmentShaderSource.replace("__FUNCTION_PLACEHOLDER__", javaFunction);
@@ -126,8 +155,10 @@ public class shaderUtils {
         glDeleteBuffers(ebo);
         glDeleteVertexArrays(vao);
 
+        glfwFreeCallbacks(window);
         glfwDestroyWindow(window);
         glfwTerminate();
+        glfwSetErrorCallback(null).free();
     }
 
 
